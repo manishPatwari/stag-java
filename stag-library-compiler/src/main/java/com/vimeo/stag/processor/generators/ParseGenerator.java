@@ -311,7 +311,7 @@ public class ParseGenerator {
         } else {
             String typeName = type.toString();
             if (!mSupportedTypes.contains(type.toString())) {
-                return StagGenerator.CLASS_STAG + ".readFromAdapter(gson, " + typeName + ".class, reader);";
+                return StagGenerator.CLASS_STAG + ".readFromAdapter(gson, new com.google.gson.reflect.TypeToken<" + typeName + ">(){}, reader);";
             } else {
                 ClassInfo info = new ClassInfo(type);
                 return "ParseUtils.parse" + info.getClassName() + "(gson, reader);";
@@ -332,8 +332,8 @@ public class ParseGenerator {
                    variableName + ");";
         } else {
             if (!mSupportedTypes.contains(type.toString())) {
-                return StagGenerator.CLASS_STAG + ".writeToAdapter(gson, " + type +
-                       ".class, writer, object." +
+                return StagGenerator.CLASS_STAG + ".writeToAdapter(gson, new com.google.gson.reflect.TypeToken<" + type +
+                       ">(){}, writer, object." +
                        variableName + ");";
             } else {
                 return "ParseUtils.write(gson, writer, object." + variableName + ");";

@@ -36,8 +36,8 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.vimeo.stag.processor.generators.model.ClassInfo;
-import com.vimeo.stag.processor.utils.FileGenUtils;
 import com.vimeo.stag.processor.generators.model.SupportedTypesModel;
+import com.vimeo.stag.processor.utils.FileGenUtils;
 import com.vimeo.stag.processor.utils.TypeUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +62,35 @@ public class StagGenerator {
         mFiler = filer;
     }
 
+    @NotNull
+    private static MethodSpec getWriteToTypeTokenAdapterSpec(@NotNull TypeVariableName genericTypeName) {
+        return MethodSpec.methodBuilder("writeToAdapter")
+                .addModifiers(Modifier.STATIC)
+                .returns(void.class)
+                .addTypeVariable(genericTypeName)
+                .addException(IOException.class)
+                .addParameter(Gson.class, "gson")
+                .addParameter(ParameterizedTypeName.get(ClassName.get(TypeToken.class), genericTypeName), "typeToken")
+                .addParameter(JsonWriter.class, "out")
+                .addParameter(genericTypeName, "value")
+                .addCode("gson.getAdapter(typeToken).write(out, value);\n")
+                .build();
+    }
+
+    @NotNull
+    private static MethodSpec getReadFromTypeTokenAdapterSpec(@NotNull TypeVariableName genericTypeName) {
+        return MethodSpec.methodBuilder("readFromAdapter")
+                .addModifiers(Modifier.STATIC)
+                .returns(genericTypeName)
+                .addTypeVariable(genericTypeName)
+                .addException(IOException.class)
+                .addParameter(Gson.class, "gson")
+                .addParameter(ParameterizedTypeName.get(ClassName.get(TypeToken.class), genericTypeName), "typeToken")
+                .addParameter(JsonReader.class, "in")
+                .addCode("return gson.getAdapter(typeToken).read(in);\n")
+                .build();
+    }
+
     /**
      * Generates the type adapters and the
      * type adapter factory to be used by
@@ -77,8 +106,8 @@ public class StagGenerator {
 
         TypeVariableName genericTypeName = TypeVariableName.get("T");
 
-        adaptersBuilder.addMethod(getWriteToAdapterSpec(genericTypeName));
-        adaptersBuilder.addMethod(getReadFromAdapterSpec(genericTypeName));
+        adaptersBuilder.addMethod(getWriteToTypeTokenAdapterSpec(genericTypeName));
+        adaptersBuilder.addMethod(getReadFromTypeTokenAdapterSpec(genericTypeName));
         adaptersBuilder.addMethod(getWriteListToAdapterSpec(genericTypeName));
         adaptersBuilder.addMethod(getReadListFromAdapterSpec(genericTypeName));
 
@@ -99,35 +128,6 @@ public class StagGenerator {
                 JavaFile.builder(FileGenUtils.GENERATED_PACKAGE_NAME, adaptersBuilder.build()).build();
 
         FileGenUtils.writeToFile(javaFile, mFiler);
-    }
-
-    @NotNull
-    private static MethodSpec getWriteToAdapterSpec(@NotNull TypeVariableName genericTypeName) {
-        return MethodSpec.methodBuilder("writeToAdapter")
-                .addModifiers(Modifier.STATIC)
-                .returns(void.class)
-                .addTypeVariable(genericTypeName)
-                .addException(IOException.class)
-                .addParameter(Gson.class, "gson")
-                .addParameter(ParameterizedTypeName.get(ClassName.get(Class.class), genericTypeName), "clazz")
-                .addParameter(JsonWriter.class, "out")
-                .addParameter(genericTypeName, "value")
-                .addCode("gson.getAdapter(clazz).write(out, value);\n")
-                .build();
-    }
-
-    @NotNull
-    private static MethodSpec getReadFromAdapterSpec(@NotNull TypeVariableName genericTypeName) {
-        return MethodSpec.methodBuilder("readFromAdapter")
-                .addModifiers(Modifier.STATIC)
-                .returns(genericTypeName)
-                .addTypeVariable(genericTypeName)
-                .addException(IOException.class)
-                .addParameter(Gson.class, "gson")
-                .addParameter(ParameterizedTypeName.get(ClassName.get(Class.class), genericTypeName), "clazz")
-                .addParameter(JsonReader.class, "in")
-                .addCode("return gson.getAdapter(clazz).read(in);\n")
-                .build();
     }
 
     @NotNull

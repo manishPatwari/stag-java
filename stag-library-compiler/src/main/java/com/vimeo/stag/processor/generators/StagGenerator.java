@@ -138,11 +138,11 @@ public class StagGenerator {
                 .addTypeVariable(genericTypeName)
                 .addException(IOException.class)
                 .addParameter(Gson.class, "gson")
-                .addParameter(ParameterizedTypeName.get(ClassName.get(Class.class), genericTypeName), "clazz")
+                .addParameter(ParameterizedTypeName.get(ClassName.get(TypeToken.class), genericTypeName), "typeToken")
                 .addParameter(JsonWriter.class, "out")
                 .addParameter(ParameterizedTypeName.get(ClassName.get(ArrayList.class), genericTypeName),
                               "list")
-                .addCode("com.google.gson.TypeAdapter<T> typeAdapter = gson.getAdapter(clazz);\n" +
+                .addCode("com.google.gson.TypeAdapter<T> typeAdapter = gson.getAdapter(typeToken);\n" +
                          '\n' +
                          "for (T object : list) {\n" +
                          "\ttypeAdapter.write(out, object);\n" +
@@ -158,10 +158,10 @@ public class StagGenerator {
                 .addTypeVariable(genericTypeName)
                 .addException(IOException.class)
                 .addParameter(Gson.class, "gson")
-                .addParameter(ParameterizedTypeName.get(ClassName.get(Class.class), genericTypeName), "clazz")
+                .addParameter(ParameterizedTypeName.get(ClassName.get(TypeToken.class), genericTypeName), "typeToken")
                 .addParameter(JsonReader.class, "in")
                 .addCode("ArrayList<T> list = new java.util.ArrayList<>();\n" +
-                         "com.google.gson.TypeAdapter<T> typeAdapter = gson.getAdapter(clazz);\n" +
+                         "com.google.gson.TypeAdapter<T> typeAdapter = gson.getAdapter(typeToken);\n" +
                          '\n' +
                          "while(in.hasNext()){\n" +
                          "\tlist.add(typeAdapter.read(in));\n" +

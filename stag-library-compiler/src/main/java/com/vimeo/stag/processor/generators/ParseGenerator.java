@@ -24,6 +24,7 @@
 package com.vimeo.stag.processor.generators;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -33,10 +34,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import com.vimeo.stag.GsonAdapterKey;
 import com.vimeo.stag.processor.generators.model.AnnotatedClass;
 import com.vimeo.stag.processor.generators.model.ClassInfo;
 import com.vimeo.stag.processor.generators.model.SupportedTypesModel;
+import com.vimeo.stag.processor.utils.AdapterNameGenerator;
 import com.vimeo.stag.processor.utils.FileGenUtils;
 import com.vimeo.stag.processor.utils.TypeUtils;
 
@@ -221,11 +222,12 @@ public class ParseGenerator {
 
     @NotNull
     private static String getJsonName(Element element) {
-        String name = element.getAnnotation(GsonAdapterKey.class).value();
+        String name = element.getAnnotation(SerializedName.class).value();
 
         if (name == null || name.isEmpty()) {
             name = element.getSimpleName().toString();
         }
+
         return name;
     }
 
@@ -233,7 +235,7 @@ public class ParseGenerator {
     private ArrayList<MethodSpec> generateParseSpec(TypeMirror type, Map<Element, TypeMirror> elements) {
         ClassInfo info = new ClassInfo(type);
         ArrayList<MethodSpec> result = new ArrayList<>();
-        MethodSpec.Builder parseBuilder = MethodSpec.methodBuilder("parse" + info.getClassName())
+        MethodSpec.Builder parseBuilder = MethodSpec.methodBuilder("parse_" + AdapterNameGenerator.generateName(info.getClassAndPackage()))
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ClassName.get(info.getType()))
                 .addParameter(Gson.class, "gson")
@@ -365,7 +367,7 @@ public class ParseGenerator {
                 return StagGenerator.CLASS_STAG + ".readFromAdapter(gson, new com.google.gson.reflect.TypeToken<" + typeName + ">(){}, reader);";
             } else {
                 ClassInfo info = new ClassInfo(type);
-                return "ParseUtils.parse" + info.getClassName() + "(gson, reader);";
+                return "ParseUtils.parse_" + AdapterNameGenerator.generateName(info.getClassAndPackage()) + "(gson, reader);";
             }
         }
     }

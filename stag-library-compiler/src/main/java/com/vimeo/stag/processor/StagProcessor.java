@@ -24,12 +24,12 @@
 package com.vimeo.stag.processor;
 
 import com.google.auto.service.AutoService;
-import com.vimeo.stag.GsonAdapterKey;
+import com.google.gson.annotations.SerializedName;
 import com.vimeo.stag.processor.generators.ParseGenerator;
 import com.vimeo.stag.processor.generators.StagGenerator;
 import com.vimeo.stag.processor.generators.model.AnnotatedClass;
-import com.vimeo.stag.processor.utils.DebugLog;
 import com.vimeo.stag.processor.generators.model.SupportedTypesModel;
+import com.vimeo.stag.processor.utils.DebugLog;
 import com.vimeo.stag.processor.utils.TypeUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +57,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("com.vimeo.stag.GsonAdapterKey")
+@SupportedAnnotationTypes("com.google.gson.annotations.SerializedName")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public final class StagProcessor extends AbstractProcessor {
 
@@ -68,7 +68,7 @@ public final class StagProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> set = new HashSet<>();
-        set.add(GsonAdapterKey.class.getCanonicalName());
+        set.add(SerializedName.class.getCanonicalName());
         return set;
     }
 
@@ -84,11 +84,11 @@ public final class StagProcessor extends AbstractProcessor {
         }
         TypeUtils.initialize(processingEnv.getTypeUtils());
 
-        DebugLog.log("\nBeginning @GsonAdapterKey annotation processing\n");
+        DebugLog.log("\nBeginning @SerializedName annotation processing\n");
 
         mHasBeenProcessed = true;
         Map<Element, List<VariableElement>> variableMap = new HashMap<>();
-        for (Element element : roundEnv.getElementsAnnotatedWith(GsonAdapterKey.class)) {
+        for (Element element : roundEnv.getElementsAnnotatedWith(SerializedName.class)) {
             if (element instanceof VariableElement) {
                 final VariableElement variableElement = (VariableElement) element;
 
@@ -133,7 +133,7 @@ public final class StagProcessor extends AbstractProcessor {
             throw new RuntimeException(e);
         }
 
-        DebugLog.log("\nSuccessfully processed @GsonAdapterKey annotations\n");
+        DebugLog.log("\nSuccessfully processed @SerializedName annotations\n");
 
         return true;
     }
@@ -152,5 +152,4 @@ public final class StagProcessor extends AbstractProcessor {
         }
         map.put(key, list);
     }
-
 }

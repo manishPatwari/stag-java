@@ -37,6 +37,7 @@ import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.vimeo.stag.processor.generators.model.ClassInfo;
 import com.vimeo.stag.processor.generators.model.SupportedTypesModel;
+import com.vimeo.stag.processor.utils.AdapterNameGenerator;
 import com.vimeo.stag.processor.utils.FileGenUtils;
 import com.vimeo.stag.processor.utils.TypeUtils;
 
@@ -187,7 +188,7 @@ public class StagGenerator {
                 factoryReturnBuilder.append("if (clazz == ")
                         .append(classInfo.getClassAndPackage())
                         .append(".class) {\n\treturn (TypeAdapter<T>) new ")
-                        .append(classInfo.getClassName())
+                        .append(AdapterNameGenerator.generateName(classInfo.getClassAndPackage()))
                         .append("Adapter(gson);\n}\n");
             }
         }

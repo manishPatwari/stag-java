@@ -34,6 +34,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.vimeo.stag.processor.generators.model.ClassInfo;
+import com.vimeo.stag.processor.utils.AdapterNameGenerator;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -71,7 +72,7 @@ class TypeAdapterGenerator {
                 .build();
 
         TypeSpec.Builder innerAdapterBuilder =
-                TypeSpec.classBuilder(mInfo.getClassName() + CLASS_SUFFIX_ADAPTER)
+                TypeSpec.classBuilder(AdapterNameGenerator.generateName(mInfo.getClassAndPackage()) + CLASS_SUFFIX_ADAPTER)
                         .addModifiers(Modifier.STATIC)
                         .addField(Gson.class, "mGson", Modifier.PRIVATE, Modifier.FINAL)
                         .addMethod(constructor)
@@ -108,7 +109,7 @@ class TypeAdapterGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .addException(IOException.class)
-                .addCode("return ParseUtils.parse" + mInfo.getClassName() + "(mGson, in);\n")
+                .addCode("return ParseUtils.parse_" + AdapterNameGenerator.generateName(mInfo.getClassAndPackage()) + "(mGson, in);\n")
                 .build();
     }
 

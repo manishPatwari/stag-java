@@ -37,7 +37,7 @@ import javax.tools.JavaFileObject;
 
 public final class FileGenUtils {
 
-    public static final String GENERATED_PACKAGE_NAME = "com.vimeo.stag.generated";
+    public static final String GENERATED_PACKAGE_NAME = "com.flipkart.stag.generated";
 
     private FileGenUtils() {
     }

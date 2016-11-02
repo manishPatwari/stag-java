@@ -103,7 +103,7 @@ public class ParseGenerator {
     private MethodSpec generateParseArraySpec(@NotNull TypeMirror type, @NotNull ArrayList<MethodSpec> methodSpecs) {
         String readType = getReadType(type, methodSpecs);
         ClassInfo info = new ClassInfo(type);
-        return MethodSpec.methodBuilder("parseArray" + info.getClassName())
+        return MethodSpec.methodBuilder("parseArray" + AdapterNameGenerator.generateName(info.getClassAndPackage()))
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ParameterizedTypeName.get(ClassName.get(ArrayList.class), TypeVariableName.get(type.toString())))
                 .addParameter(Gson.class, "gson")
@@ -340,23 +340,25 @@ public class ParseGenerator {
             return "reader.nextString();";
         } else if (type.toString().equals(int.class.getName())) {
             return "reader.nextInt();";
+        } else if (type.toString().equals(float.class.getName())) {
+            return "(float)reader.nextDouble();";
         } else if (TypeUtils.getOuterClassType(type).equals(ArrayList.class.getName())) {
             TypeMirror innerType = getInnerListType(type);
-            if(!TypeUtils.getOuterClassType(innerType).equals(ArrayList.class.getName()) &&
+            if (!TypeUtils.getOuterClassType(innerType).equals(ArrayList.class.getName()) &&
                     (mSupportedTypes.contains(innerType.toString())
-                    || innerType.toString().equals(long.class.getName())
-                    || innerType.toString().equals(double.class.getName())
-                    || innerType.toString().equals(boolean.class.getName())
-                    || innerType.toString().equals(String.class.getName())
-                    || innerType.toString().equals(int.class.getName()))) {
+                            || innerType.toString().equals(long.class.getName())
+                            || innerType.toString().equals(double.class.getName())
+                            || innerType.toString().equals(boolean.class.getName())
+                            || innerType.toString().equals(String.class.getName())
+                            || innerType.toString().equals(int.class.getName())
+                            || innerType.toString().equals(float.class.getName()))) {
                 ClassInfo classInfo = new ClassInfo(innerType);
-                if(!methodSpedAdded.contains(innerType.toString())) {
+                if (!methodSpedAdded.contains(innerType.toString())) {
                     MethodSpec methodSpec = generateParseArraySpec(innerType, methodSpecs);
                     methodSpecs.add(methodSpec);
                     methodSpedAdded.add(innerType.toString());
                 }
-
-                return "ParseUtils.parseArray" + classInfo.getClassName() + "(gson, reader);";
+                return "ParseUtils.parseArray" + AdapterNameGenerator.generateName(classInfo.getClassAndPackage()) + "(gson, reader);";
             } else {
                 return "ParseUtils.parseArray(gson, reader, new com.google.gson.reflect.TypeToken<" + innerType.toString() + ">(){});";
             }
@@ -372,15 +374,14 @@ public class ParseGenerator {
         }
     }
 
-
-
     @NotNull
     private String getWriteType(@NotNull TypeMirror type, @NotNull String variableName) {
         if (type.toString().equals(long.class.getName()) ||
             type.toString().equals(double.class.getName()) ||
             type.toString().equals(boolean.class.getName()) ||
             type.toString().equals(String.class.getName()) ||
-            type.toString().equals(int.class.getName())) {
+            type.toString().equals(int.class.getName()) ||
+                type.toString().equals(float.class.getName())) {
             return "writer.value(object." + variableName + ");";
         } else if (TypeUtils.getOuterClassType(type).equals(ArrayList.class.getName())) {
             return "ParseUtils.write(gson, writer, new com.google.gson.reflect.TypeToken<" + getInnerListType(type).toString() + ">(){}, object." +
@@ -400,7 +401,7 @@ public class ParseGenerator {
         return type.equals(long.class.getName()) ||
                type.equals(double.class.getName()) ||
                type.equals(boolean.class.getName()) ||
-               type.equals(int.class.getName());
+               type.equals(int.class.getName()) || type.equals(float.class.getName());
     }
 
     private static TypeMirror getInnerListType(@NotNull TypeMirror type) {

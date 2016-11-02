@@ -25,6 +25,7 @@ package com.vimeo.stag.processor;
 
 import com.google.auto.service.AutoService;
 import com.google.gson.annotations.SerializedName;
+import com.vimeo.stag.Enum;
 import com.vimeo.stag.processor.generators.ParseGenerator;
 import com.vimeo.stag.processor.generators.StagGenerator;
 import com.vimeo.stag.processor.generators.model.AnnotatedClass;
@@ -48,19 +49,21 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("com.google.gson.annotations.SerializedName")
+@SupportedOptions("stagFile")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public final class StagProcessor extends AbstractProcessor {
-
+    public static final String OPTION_STAG_FILE = "stagFile";
     public static final boolean DEBUG = false;
     private boolean mHasBeenProcessed;
     private final Set<String> mSupportedTypes = new HashSet<>();
@@ -82,6 +85,12 @@ public final class StagProcessor extends AbstractProcessor {
         if (mHasBeenProcessed) {
             return true;
         }
+
+        String stagFilePath = processingEnv.getOptions().get(OPTION_STAG_FILE);
+        if (stagFilePath != null) {
+            System.out.println(stagFilePath);
+        }
+
         TypeUtils.initialize(processingEnv.getTypeUtils());
 
         DebugLog.log("\nBeginning @SerializedName annotation processing\n");
@@ -91,32 +100,34 @@ public final class StagProcessor extends AbstractProcessor {
         for (Element element : roundEnv.getElementsAnnotatedWith(SerializedName.class)) {
             if (element instanceof VariableElement) {
                 final VariableElement variableElement = (VariableElement) element;
-
                 Set<Modifier> modifiers = variableElement.getModifiers();
-                if (modifiers.contains(Modifier.FINAL)) {
-                    throw new RuntimeException("Unable to access field \"" +
-                                               variableElement.getSimpleName().toString() + "\" in class " +
-                                               variableElement.getEnclosingElement().asType() +
-                                               ", field must not be final.");
-                } else if (!modifiers.contains(Modifier.PUBLIC)) {
-                    throw new RuntimeException("Unable to access field \"" +
-                                               variableElement.getSimpleName().toString() + "\" in class " +
-                                               variableElement.getEnclosingElement().asType() +
-                                               ", field must public.");
-                }
-
                 Element enclosingClassElement = variableElement.getEnclosingElement();
-                TypeMirror enclosingClass = enclosingClassElement.asType();
-
-                if (!TypeUtils.isParameterizedType(enclosingClass) ||
-                    TypeUtils.isConcreteType(enclosingClass)) {
-                    mSupportedTypes.add(enclosingClass.toString());
+                if(enclosingClassElement.getKind() != ElementKind.ENUM) {
+                    TypeMirror enclosingClass = enclosingClassElement.asType();
+                    if (!TypeUtils.isParameterizedType(enclosingClass) ||
+                            TypeUtils.isConcreteType(enclosingClass)) {
+                        if (modifiers.contains(Modifier.FINAL)) {
+                            if(!modifiers.contains(Modifier.STATIC)) {
+                                throw new RuntimeException("Unable to access field \"" +
+                                        variableElement.getSimpleName().toString() + "\" in class " +
+                                        variableElement.getEnclosingElement().asType() +
+                                        ", field must not be final.");
+                            }
+                        } else if (!modifiers.contains(Modifier.PUBLIC)) {
+                            throw new RuntimeException("Unable to access field \"" +
+                                    variableElement.getSimpleName().toString() + "\" in class " +
+                                    variableElement.getEnclosingElement().asType() +
+                                    ", field must public.");
+                        }
+                        mSupportedTypes.add(enclosingClass.toString());
+                        addToListMap(variableMap, enclosingClassElement, variableElement);
+                    }
                 }
-
-                addToListMap(variableMap, enclosingClassElement, variableElement);
             } else if (element instanceof TypeElement) {
-                mSupportedTypes.add(element.asType().toString());
-                addToListMap(variableMap, element, null);
+                if(element.getKind() != ElementKind.ENUM) {
+                    mSupportedTypes.add(element.asType().toString());
+                    addToListMap(variableMap, element, null);
+                }
             }
         }
 

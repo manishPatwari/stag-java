@@ -33,6 +33,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.vimeo.stag.processor.generators.model.AnnotatedClass;
@@ -211,6 +212,7 @@ public class ParseGenerator {
                 .returns(void.class)
                 .addCode("\twriter.beginObject();\n" +
                          "\tif (object == null) {\n" +
+                        "\t\twriter.endObject();\n"+
                          "\t\treturn;\n" +
                          "\t} else {\n");
 

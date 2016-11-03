@@ -29,6 +29,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -65,6 +66,10 @@ public class ParseGenerator {
 
     @NotNull
     private final Set<String> mSupportedTypes;
+    @NotNull
+    private TypeSpec.Builder typeSpecBuilder;
+    @NotNull
+    private Set<String> typeTokenFieldAdded = new HashSet<>();
 
     @NotNull
     private final Filer mFiler;
@@ -160,12 +165,10 @@ public class ParseGenerator {
      *                     modifying it.
      */
     public void generateParsingCode() throws IOException {
-        TypeSpec.Builder typeSpecBuilder =
-                TypeSpec.classBuilder(CLASS_PARSE_UTILS).addModifiers(Modifier.FINAL);
+        typeSpecBuilder = TypeSpec.classBuilder(CLASS_PARSE_UTILS).addModifiers(Modifier.FINAL);
 
         typeSpecBuilder.addMethod(ParseGenerator.generateParseArraySpecGeneric());
         typeSpecBuilder.addMethod(ParseGenerator.generateWriteArraySpec());
-
 
         List<AnnotatedClass> list = SupportedTypesModel.getInstance().getSupportedTypes();
 
@@ -183,6 +186,18 @@ public class ParseGenerator {
                 JavaFile.builder(FileGenUtils.GENERATED_PACKAGE_NAME, typeSpecBuilder.build()).build();
 
         FileGenUtils.writeToFile(javaFile, mFiler);
+    }
+
+    private String generateTypeTokenField(String name) {
+        System.out.println(Math.abs(name.hashCode()) + " for " + name);
+        String fieldName = "TT_" + Math.abs(name.hashCode());
+        if (!typeTokenFieldAdded.contains(fieldName)) {
+            FieldSpec.Builder builder = FieldSpec.builder(TypeToken.class, fieldName, Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL);
+            builder.initializer("new TypeToken<" + name + ">(){}");
+            typeSpecBuilder.addField(builder.build());
+            typeTokenFieldAdded.add(fieldName);
+        }
+        return fieldName;
     }
 
     @NotNull
@@ -323,7 +338,6 @@ public class ParseGenerator {
         } else {
             return null;
         }
-
     }
 
     private Set<String> methodSpedAdded = new HashSet<>();
@@ -360,13 +374,15 @@ public class ParseGenerator {
                 }
                 return "ParseUtils.parseArray" + AdapterNameGenerator.generateName(classInfo.getClassAndPackage()) + "(gson, reader);";
             } else {
-                return "ParseUtils.parseArray(gson, reader, new com.google.gson.reflect.TypeToken<" + innerType.toString() + ">(){});";
+                String tokenField = generateTypeTokenField(innerType.toString());
+                return "ParseUtils.parseArray(gson, reader," + tokenField + ");";
             }
 
         } else {
             String typeName = type.toString();
-            if (!mSupportedTypes.contains(type.toString())) {
-                return StagGenerator.CLASS_STAG + ".readFromAdapter(gson, new com.google.gson.reflect.TypeToken<" + typeName + ">(){}, reader);";
+            if (!mSupportedTypes.contains(typeName)) {
+                String tokenField = generateTypeTokenField(typeName);
+                return "(" + typeName + ") " + StagGenerator.CLASS_STAG + ".readFromAdapter(gson, " + tokenField + ", reader);";
             } else {
                 ClassInfo info = new ClassInfo(type);
                 return "ParseUtils.parse_" + AdapterNameGenerator.generateName(info.getClassAndPackage()) + "(gson, reader);";
@@ -384,13 +400,12 @@ public class ParseGenerator {
                 type.toString().equals(float.class.getName())) {
             return "writer.value(object." + variableName + ");";
         } else if (TypeUtils.getOuterClassType(type).equals(ArrayList.class.getName())) {
-            return "ParseUtils.write(gson, writer, new com.google.gson.reflect.TypeToken<" + getInnerListType(type).toString() + ">(){}, object." +
-                   variableName + ");";
+            String tokenField = generateTypeTokenField(getInnerListType(type).toString());
+            return "ParseUtils.write(gson, writer, " + tokenField + ", object." + variableName + ");";
         } else {
             if (!mSupportedTypes.contains(type.toString())) {
-                return StagGenerator.CLASS_STAG + ".writeToAdapter(gson, new com.google.gson.reflect.TypeToken<" + type +
-                       ">(){}, writer, object." +
-                       variableName + ");";
+                String tokenField = generateTypeTokenField(type.toString());
+                return StagGenerator.CLASS_STAG + ".writeToAdapter(gson, " + tokenField + ", writer, object." + variableName + ");";
             } else {
                 return "ParseUtils.write(gson, writer, object." + variableName + ");";
             }
@@ -407,5 +422,4 @@ public class ParseGenerator {
     private static TypeMirror getInnerListType(@NotNull TypeMirror type) {
         return ((DeclaredType) type).getTypeArguments().get(0);
     }
-
 }

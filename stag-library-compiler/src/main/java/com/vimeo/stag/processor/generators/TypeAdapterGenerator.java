@@ -25,6 +25,7 @@ package com.vimeo.stag.processor.generators;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.squareup.javapoet.ClassName;
@@ -33,7 +34,6 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import com.vimeo.stag.GsonAdapterKey;
 import com.vimeo.stag.processor.generators.model.AnnotatedClass;
 import com.vimeo.stag.processor.generators.model.ClassInfo;
 import com.vimeo.stag.processor.generators.model.SupportedTypesModel;
@@ -197,7 +197,7 @@ public class TypeAdapterGenerator {
 
     @NotNull
     private static String getJsonName(@NotNull Element element) {
-        String name = element.getAnnotation(GsonAdapterKey.class).value();
+        String name = element.getAnnotation(SerializedName.class).value();
 
         if (name.isEmpty()) {
             name = element.getSimpleName().toString();

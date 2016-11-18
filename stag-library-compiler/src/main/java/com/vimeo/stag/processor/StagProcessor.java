@@ -24,8 +24,8 @@
 package com.vimeo.stag.processor;
 
 import com.google.auto.service.AutoService;
+import com.google.gson.annotations.SerializedName;
 import com.squareup.javapoet.JavaFile;
-import com.vimeo.stag.GsonAdapterKey;
 import com.vimeo.stag.processor.generators.StagGenerator;
 import com.vimeo.stag.processor.generators.TypeAdapterFactoryGenerator;
 import com.vimeo.stag.processor.generators.TypeAdapterGenerator;
@@ -76,7 +76,7 @@ public final class StagProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> set = new HashSet<>();
-        set.add(GsonAdapterKey.class.getCanonicalName());
+        set.add(SerializedName.class.getCanonicalName());
         return set;
     }
 
@@ -97,7 +97,7 @@ public final class StagProcessor extends AbstractProcessor {
 
         mHasBeenProcessed = true;
         Map<Element, List<VariableElement>> variableMap = new HashMap<>();
-        for (Element element : roundEnv.getElementsAnnotatedWith(GsonAdapterKey.class)) {
+        for (Element element : roundEnv.getElementsAnnotatedWith(SerializedName.class)) {
             if (element instanceof VariableElement) {
                 final VariableElement variableElement = (VariableElement) element;
 

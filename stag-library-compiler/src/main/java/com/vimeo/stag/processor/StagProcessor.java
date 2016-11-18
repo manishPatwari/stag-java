@@ -115,9 +115,11 @@ public final class StagProcessor extends AbstractProcessor {
                             Set<Modifier> modifiers = variableElement.getModifiers();
                             TypeMirror enclosingClass = enclosingElement.asType();
                             if (!TypeUtils.isParameterizedType(enclosingClass) || TypeUtils.isConcreteType(enclosingClass)) {
-                                checkModifiers(variableElement, modifiers);
-                                mSupportedTypes.add(enclosingClass.toString());
-                                addToListMap(variableMap, enclosingElement, variableElement);
+                                if (!modifiers.contains(Modifier.FINAL) || !modifiers.contains(Modifier.STATIC)) {
+                                    checkModifiers(variableElement, modifiers);
+                                    mSupportedTypes.add(enclosingClass.toString());
+                                    addToListMap(variableMap, enclosingElement, variableElement);
+                                }
                             }
                         }
                     } else if (enclosedElement instanceof TypeElement) {
@@ -126,32 +128,6 @@ public final class StagProcessor extends AbstractProcessor {
                             addToListMap(variableMap, enclosedElement, null);
                         }
                     }
-                }
-            }
-        }
-
-        /**
-         * This is used to iterate through the list of elements which has {@link SerializedName} annotation.
-         */
-        for (Element element : roundEnv.getElementsAnnotatedWith(SerializedName.class)) {
-            if (element instanceof VariableElement) {
-                final VariableElement variableElement = (VariableElement) element;
-                Set<Modifier> modifiers = variableElement.getModifiers();
-
-                Element enclosingClassElement = variableElement.getEnclosingElement();
-                if (enclosingClassElement.getKind() != ElementKind.ENUM) {
-                    TypeMirror enclosingClass = enclosingClassElement.asType();
-                    if (!TypeUtils.isParameterizedType(enclosingClass) ||
-                            TypeUtils.isConcreteType(enclosingClass)) {
-                        checkModifiers(variableElement, modifiers);
-                        mSupportedTypes.add(enclosingClass.toString());
-                        addToListMap(variableMap, enclosingClassElement, variableElement);
-                    }
-                }
-            } else if (element instanceof TypeElement) {
-                if (element.getKind() != ElementKind.ENUM) {
-                    mSupportedTypes.add(element.asType().toString());
-                    addToListMap(variableMap, element, null);
                 }
             }
         }

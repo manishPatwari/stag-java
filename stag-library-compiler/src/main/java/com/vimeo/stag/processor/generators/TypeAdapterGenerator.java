@@ -200,12 +200,14 @@ public class TypeAdapterGenerator {
      */
     @NotNull
     private static String getJsonName(@NotNull Element element) {
-        String name = null == element.getAnnotation(SerializedName.class) ? "" : element.getAnnotation(SerializedName.class).value();
-
-        if (name.isEmpty()) {
-            name = element.getSimpleName().toString();
+        String value;
+        SerializedName annotation = element.getAnnotation(SerializedName.class);
+        if (annotation != null) {
+            value = annotation.value();
+        } else {
+            value = element.getSimpleName().toString();
         }
-        return name;
+        return value;
     }
 
     private static boolean isNative(@NotNull String type) {

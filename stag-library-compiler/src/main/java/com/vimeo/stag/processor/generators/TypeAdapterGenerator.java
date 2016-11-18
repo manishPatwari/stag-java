@@ -195,9 +195,12 @@ public class TypeAdapterGenerator {
         return ParameterizedTypeName.get(ClassName.get(TypeAdapter.class), typeName);
     }
 
+    /**
+     * If the element is not annotated with {@link SerializedName}, the variable name is used.
+     */
     @NotNull
     private static String getJsonName(@NotNull Element element) {
-        String name = element.getAnnotation(SerializedName.class).value();
+        String name = null == element.getAnnotation(SerializedName.class) ? "" : element.getAnnotation(SerializedName.class).value();
 
         if (name.isEmpty()) {
             name = element.getSimpleName().toString();

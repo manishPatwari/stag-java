@@ -26,6 +26,7 @@ package com.vimeo.stag.processor;
 import com.google.auto.service.AutoService;
 import com.google.gson.annotations.SerializedName;
 import com.squareup.javapoet.JavaFile;
+import com.vimeo.stag.GsonAdapterKey;
 import com.vimeo.stag.processor.generators.StagGenerator;
 import com.vimeo.stag.processor.generators.TypeAdapterFactoryGenerator;
 import com.vimeo.stag.processor.generators.TypeAdapterGenerator;
@@ -98,6 +99,40 @@ public final class StagProcessor extends AbstractProcessor {
 
         mHasBeenProcessed = true;
         Map<Element, List<VariableElement>> variableMap = new HashMap<>();
+
+        /**
+         * This is to check if the annotation is present at the class level.
+         */
+        Set<? extends Element> rootElements = roundEnv.getRootElements();
+        for (Element rootElement : rootElements) {
+            if (rootElement.getAnnotation(GsonAdapterKey.class) != null) {
+                List<? extends Element> enclosedElements = rootElement.getEnclosedElements();
+                for (Element enclosedElement : enclosedElements) {
+                    if (enclosedElement instanceof VariableElement) {
+                        final VariableElement variableElement = (VariableElement) enclosedElement;
+                        Element enclosingElement = variableElement.getEnclosingElement();
+                        if (enclosingElement.getKind() != ElementKind.ENUM) {
+                            Set<Modifier> modifiers = variableElement.getModifiers();
+                            TypeMirror enclosingClass = enclosingElement.asType();
+                            if (!TypeUtils.isParameterizedType(enclosingClass) || TypeUtils.isConcreteType(enclosingClass)) {
+                                checkModifiers(variableElement, modifiers);
+                                mSupportedTypes.add(enclosingClass.toString());
+                                addToListMap(variableMap, enclosingElement, variableElement);
+                            }
+                        }
+                    } else if (enclosedElement instanceof TypeElement) {
+                        if (enclosedElement.getKind() != ElementKind.ENUM) {
+                            mSupportedTypes.add(enclosedElement.asType().toString());
+                            addToListMap(variableMap, enclosedElement, null);
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * This is used to iterate through the list of elements which has {@link SerializedName} annotation.
+         */
         for (Element element : roundEnv.getElementsAnnotatedWith(SerializedName.class)) {
             if (element instanceof VariableElement) {
                 final VariableElement variableElement = (VariableElement) element;
@@ -108,19 +143,7 @@ public final class StagProcessor extends AbstractProcessor {
                     TypeMirror enclosingClass = enclosingClassElement.asType();
                     if (!TypeUtils.isParameterizedType(enclosingClass) ||
                             TypeUtils.isConcreteType(enclosingClass)) {
-                        if (modifiers.contains(Modifier.FINAL)) {
-                            if (!modifiers.contains(Modifier.STATIC)) {
-                                throw new RuntimeException("Unable to access field \"" +
-                                        variableElement.getSimpleName().toString() + "\" in class " +
-                                        variableElement.getEnclosingElement().asType() +
-                                        ", field must not be final.");
-                            }
-                        } else if (modifiers.contains(Modifier.PRIVATE)) {
-                            throw new RuntimeException("Unable to access field \"" +
-                                    variableElement.getSimpleName().toString() + "\" in class " +
-                                    variableElement.getEnclosingElement().asType() +
-                                    ", field must not be private.");
-                        }
+                        checkModifiers(variableElement, modifiers);
                         mSupportedTypes.add(enclosingClass.toString());
                         addToListMap(variableMap, enclosingClassElement, variableElement);
                     }
@@ -173,6 +196,22 @@ public final class StagProcessor extends AbstractProcessor {
         return true;
     }
 
+    private void checkModifiers(VariableElement variableElement, Set<Modifier> modifiers) {
+        if (modifiers.contains(Modifier.FINAL)) {
+            if (!modifiers.contains(Modifier.STATIC)) {
+                throw new RuntimeException("Unable to access field \"" +
+                        variableElement.getSimpleName().toString() + "\" in class " +
+                        variableElement.getEnclosingElement().asType() +
+                        ", field must not be final.");
+            }
+        } else if (modifiers.contains(Modifier.PRIVATE)) {
+            throw new RuntimeException("Unable to access field \"" +
+                    variableElement.getSimpleName().toString() + "\" in class " +
+                    variableElement.getEnclosingElement().asType() +
+                    ", field must not be private.");
+        }
+    }
+
     private static void addToListMap(@NotNull Map<Element, List<VariableElement>> map, @Nullable Element key,
                                      @Nullable VariableElement value) {
         if (key == null) {
@@ -187,5 +226,4 @@ public final class StagProcessor extends AbstractProcessor {
         }
         map.put(key, list);
     }
-
 }

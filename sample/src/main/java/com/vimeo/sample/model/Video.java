@@ -44,6 +44,9 @@ public class Video {
     @SerializedName("stats")
     public Stats mStats;
 
+    @SerializedName("dateEnum")
+    public DateEnum dateEnum;
+
     @Override
     public String toString() {
         return "user: { " + (mUser != null ? mUser.toString() : null) + " }\nlink: " + mLink + "\nname: " +

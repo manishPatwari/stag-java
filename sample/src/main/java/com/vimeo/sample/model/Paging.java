@@ -23,11 +23,12 @@
  */
 package com.vimeo.sample.model;
 
-import com.vimeo.stag.GsonAdapterKey;
+
+import com.google.gson.annotations.SerializedName;
 
 public class Paging {
 
-    @GsonAdapterKey
+    @SerializedName("first")
     public String first;
 
 }

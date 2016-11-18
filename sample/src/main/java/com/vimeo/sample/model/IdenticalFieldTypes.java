@@ -1,26 +1,26 @@
 package com.vimeo.sample.model;
 
-import com.vimeo.stag.GsonAdapterKey;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 
 public class IdenticalFieldTypes {
 
-    @GsonAdapterKey
+    @SerializedName("mUser")
     User mUser;
 
-    @GsonAdapterKey
+    @SerializedName("mSecondUser")
     User mSecondUser;
 
-    @GsonAdapterKey
+    @SerializedName("mUsersList")
     ArrayList<User> mUsersList;
 
-    @GsonAdapterKey
+    @SerializedName("mSecondUsersList")
     ArrayList<User> mSecondUsersList;
 
-    @GsonAdapterKey
+    @SerializedName("mStatsArrayList")
     ArrayList<Stats> mStatsArrayList;
 
-    @GsonAdapterKey
+    @SerializedName("mStats")
     Stats mStats;
 }

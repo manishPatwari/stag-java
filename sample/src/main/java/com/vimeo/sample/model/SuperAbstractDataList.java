@@ -23,14 +23,14 @@
  */
 package com.vimeo.sample.model;
 
-import com.vimeo.stag.GsonAdapterKey;
+import com.google.gson.annotations.SerializedName;
 
 public class SuperAbstractDataList<T, K> {
 
-    @GsonAdapterKey
+    @SerializedName("paging")
     public T paging;
 
-    @GsonAdapterKey
+    @SerializedName("data")
     public K data;
 
 }

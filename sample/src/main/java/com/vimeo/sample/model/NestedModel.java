@@ -1,7 +1,6 @@
 package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.vimeo.stag.GsonAdapterKey;
 
 /*
     This is to simulate a scenario where a class with the same name is present as
@@ -10,6 +9,6 @@ import com.vimeo.stag.GsonAdapterKey;
 
 public class NestedModel {
 
-    @GsonAdapterKey("test1")
+    @SerializedName("test1")
     public String test1;
 }

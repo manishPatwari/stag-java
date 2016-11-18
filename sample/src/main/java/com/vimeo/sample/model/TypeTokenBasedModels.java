@@ -1,15 +1,16 @@
 package com.vimeo.sample.model;
 
-import com.vimeo.stag.GsonAdapterKey;
+
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 import java.util.Map;
 
 public class TypeTokenBasedModels {
 
-    @GsonAdapterKey("videoMap")
+    @SerializedName("videoMap")
     public Map<String, Video> videoMap;
 
-    @GsonAdapterKey("videoList")
+    @SerializedName("videoList")
     public List<Video> videoList;
 }

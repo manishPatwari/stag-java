@@ -23,11 +23,11 @@
  */
 package com.vimeo.sample.model;
 
-import com.vimeo.stag.GsonAdapterKey;
+import com.google.gson.annotations.SerializedName;
 
 public class Stats {
 
-    @GsonAdapterKey("plays")
+    @SerializedName("plays")
     public int mPlays;
 
 

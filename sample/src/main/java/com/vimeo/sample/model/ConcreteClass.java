@@ -23,18 +23,18 @@
  */
 package com.vimeo.sample.model;
 
-import com.vimeo.stag.GsonAdapterKey;
+import com.google.gson.annotations.SerializedName;
 
 public class ConcreteClass {
 
     public static class NestedModel {
 
-        @GsonAdapterKey
+        @SerializedName("message")
         public String message;
 
         public static class DoublyNestedModel {
 
-            @GsonAdapterKey
+            @SerializedName("message")
             public String message;
 
         }

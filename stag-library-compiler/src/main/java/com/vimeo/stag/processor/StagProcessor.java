@@ -65,7 +65,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("com.vimeo.stag.GsonAdapterKey")
+@SupportedAnnotationTypes("com.google.gson.annotations.SerializedName")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public final class StagProcessor extends AbstractProcessor {
 
@@ -93,7 +93,7 @@ public final class StagProcessor extends AbstractProcessor {
         TypeUtils.initialize(processingEnv.getTypeUtils());
         ElementUtils.initialize(processingEnv.getElementUtils());
 
-        DebugLog.log("\nBeginning @GsonAdapterKey annotation processing\n");
+        DebugLog.log("\nBeginning @SerializedName annotation processing\n");
 
         mHasBeenProcessed = true;
         Map<Element, List<VariableElement>> variableMap = new HashMap<>();
@@ -164,7 +164,7 @@ public final class StagProcessor extends AbstractProcessor {
             throw new RuntimeException(e);
         }
 
-        DebugLog.log("\nSuccessfully processed @GsonAdapterKey annotations\n");
+        DebugLog.log("\nSuccessfully processed @SerializedName annotations\n");
 
         return true;
     }

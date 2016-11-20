@@ -25,6 +25,10 @@ package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * This class provides an example of using
+ * nested static inner model classes.
+ */
 public class ConcreteClass {
 
     public static class NestedModel {

@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License (MIT)
  * <p/>
  * Copyright (c) 2016 Vimeo
@@ -25,6 +25,16 @@ package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Ensures that retrieving fields from
+ * parent classes works correctly and
+ * that adapters are not created for
+ * parameterized classes whose parameters
+ * have not been resolved.
+ *
+ * @param <T> the paging type.
+ * @param <K> the data type.
+ */
 public class SuperAbstractDataList<T, K> {
 
     @SerializedName("paging")

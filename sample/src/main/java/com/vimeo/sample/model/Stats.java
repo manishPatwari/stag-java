@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License (MIT)
  * <p/>
  * Copyright (c) 2016 Vimeo
@@ -25,6 +25,9 @@ package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Simple stats model used by the sample app.
+ */
 public class Stats {
 
     @SerializedName("plays")

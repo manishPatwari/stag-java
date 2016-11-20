@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License (MIT)
  * <p/>
  * Copyright (c) 2016 Vimeo
@@ -23,14 +23,17 @@
  */
 package com.vimeo.sample.model;
 
-
 import com.vimeo.stag.GsonAdapterKey;
 
-@GsonAdapterKey
+/**
+ * Simple user model used by the sample app.
+ */
 public class User {
 
+    @GsonAdapterKey("name")
     public String mName;
 
+    @GsonAdapterKey("location")
     public String mLocation;
 
     @Override

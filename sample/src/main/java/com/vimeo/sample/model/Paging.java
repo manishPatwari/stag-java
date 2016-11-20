@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License (MIT)
  * <p/>
  * Copyright (c) 2016 Vimeo
@@ -26,6 +26,9 @@ package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Simple paging info model used by the sample.
+ */
 public class Paging {
 
     @SerializedName("first")

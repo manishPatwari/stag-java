@@ -21,40 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.vimeo.sample.model;
+package com.vimeo.stag.processor;
 
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
+import com.google.testing.compile.CompilationRule;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import org.junit.Before;
+import org.junit.Rule;
+
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
- * The dates returned by the API differ from the
- * default parser provided by gson. Registering
- * this parser with gson ensures that we can
- * correctly handle dates.
+ * Base unit test that sets up the utils class.
  */
-public class DateParser extends TypeAdapter<Date> {
+public class BaseUnitTest {
 
-    private static final SimpleDateFormat dateFormat =
-            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.ENGLISH);
+    @Rule
+    public CompilationRule rule = new CompilationRule();
+    protected Elements elements;
+    protected Types types;
 
-    @Override
-    public void write(JsonWriter out, Date value) throws IOException {
-        out.value(dateFormat.format(value));
+
+    @Before
+    public void _setup() {
+        elements = rule.getElements();
+        types = rule.getTypes();
+
+        Utils.setup(elements, types);
     }
 
-    @Override
-    public Date read(JsonReader in) throws IOException {
-        try {
-            return dateFormat.parse(in.nextString());
-        } catch (ParseException e) {
-            throw new IOException("Date parsing failed", e);
-        }
-    }
 }

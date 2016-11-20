@@ -57,6 +57,7 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -67,10 +68,13 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("com.google.gson.annotations.SerializedName")
+@SupportedAnnotationTypes("com.vimeo.stag.GsonAdapterKey")
+@SupportedOptions(value = {"stagGeneratedPackageName"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public final class StagProcessor extends AbstractProcessor {
 
+    private static final String OPTION_PACKAGE_NAME = "stagGeneratedPackageName";
+    private static final String DEFAULT_GENERATED_PACKAGE_NAME = "com.vimeo.stag.generated";
     public static final boolean DEBUG = false;
     private boolean mHasBeenProcessed;
     private final Set<String> mSupportedTypes = new HashSet<>();
@@ -78,7 +82,7 @@ public final class StagProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> set = new HashSet<>();
-        set.add(SerializedName.class.getCanonicalName());
+        set.add(GsonAdapterKey.class.getCanonicalName());
         return set;
     }
 
@@ -92,10 +96,16 @@ public final class StagProcessor extends AbstractProcessor {
         if (mHasBeenProcessed) {
             return true;
         }
+
+        String packageName = processingEnv.getOptions().get(OPTION_PACKAGE_NAME);
+        if (packageName == null || packageName.isEmpty()) {
+            packageName = DEFAULT_GENERATED_PACKAGE_NAME;
+        }
+
         TypeUtils.initialize(processingEnv.getTypeUtils());
         ElementUtils.initialize(processingEnv.getElementUtils());
 
-        DebugLog.log("\nBeginning @SerializedName annotation processing\n");
+        DebugLog.log("\nBeginning @GsonAdapterKey annotation processing\n");
 
         mHasBeenProcessed = true;
         Map<Element, List<VariableElement>> variableMap = new HashMap<>();
@@ -138,12 +148,12 @@ public final class StagProcessor extends AbstractProcessor {
                 SupportedTypesModel.getInstance()
                         .addSupportedType(new AnnotatedClass(entry.getKey(), entry.getValue()));
             }
-            mSupportedTypes.addAll(KnownTypeAdapterFactoriesUtils.loadKnownTypes(processingEnv));
+            mSupportedTypes.addAll(KnownTypeAdapterFactoriesUtils.loadKnownTypes(processingEnv, packageName));
 
             StagGenerator adapterGenerator = new StagGenerator(filer, mSupportedTypes);
-            adapterGenerator.generateTypeAdapterFactory();
+            adapterGenerator.generateTypeAdapterFactory(packageName);
 
-            TypeTokenConstantsGenerator typeTokenConstantsGenerator = new TypeTokenConstantsGenerator(filer);
+            TypeTokenConstantsGenerator typeTokenConstantsGenerator = new TypeTokenConstantsGenerator(filer, packageName);
 
             Set<Element> list = SupportedTypesModel.getInstance().getSupportedElements();
             for (Element element : list) {
@@ -151,24 +161,23 @@ public final class StagProcessor extends AbstractProcessor {
                     ClassInfo classInfo = new ClassInfo(element.asType());
                     TypeAdapterGenerator independentAdapter = new TypeAdapterGenerator(classInfo);
                     JavaFile javaFile = JavaFile.builder(classInfo.getPackageName(),
-                                                         independentAdapter.getTypeAdapterSpec(
-                                                                 typeTokenConstantsGenerator)).build();
+                            independentAdapter.getTypeAdapterSpec(typeTokenConstantsGenerator)).build();
                     FileGenUtils.writeToFile(javaFile, filer);
 
                     TypeAdapterFactoryGenerator factoryGenerator = new TypeAdapterFactoryGenerator(classInfo);
                     javaFile = JavaFile.builder(classInfo.getPackageName(),
-                                                factoryGenerator.getTypeAdapterFactorySpec()).build();
+                            factoryGenerator.getTypeAdapterFactorySpec()).build();
                     FileGenUtils.writeToFile(javaFile, filer);
                 }
             }
 
             typeTokenConstantsGenerator.generateTypeTokenConstants();
-            KnownTypeAdapterFactoriesUtils.writeKnownTypes(processingEnv, mSupportedTypes);
+            KnownTypeAdapterFactoriesUtils.writeKnownTypes(processingEnv, packageName, mSupportedTypes);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        DebugLog.log("\nSuccessfully processed @SerializedName annotations\n");
+        DebugLog.log("\nSuccessfully processed @GsonAdapterKey annotations\n");
 
         return true;
     }

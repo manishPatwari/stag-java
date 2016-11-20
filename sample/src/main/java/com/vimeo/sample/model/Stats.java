@@ -24,15 +24,16 @@
 package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
+import com.vimeo.stag.GsonAdapterKey;
 
 /**
  * Simple stats model used by the sample app.
  */
+@GsonAdapterKey
 public class Stats {
 
     @SerializedName("plays")
     public int mPlays;
-
 
     @Override
     public String toString() {

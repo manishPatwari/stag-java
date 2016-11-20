@@ -24,6 +24,7 @@
 package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
+import com.vimeo.stag.GsonAdapterKey;
 
 import java.util.ArrayList;
 
@@ -36,6 +37,7 @@ import java.util.ArrayList;
  * generated for the same type within the
  * type adapter factory.
  */
+@GsonAdapterKey
 public class IdenticalFieldTypes {
 
     @SerializedName("mUser")

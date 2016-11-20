@@ -25,6 +25,7 @@ package com.vimeo.sample.model;
 
 
 import com.google.gson.annotations.SerializedName;
+import com.vimeo.stag.GsonAdapterKey;
 
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import java.util.Map;
  * the interface fields for Map and List,
  * according to what stag supports.
  */
+@GsonAdapterKey
 public class TypeTokenBasedModels {
 
     @SerializedName("videoMap")

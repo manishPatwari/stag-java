@@ -30,8 +30,8 @@ import com.vimeo.stag.GsonAdapterKey;
  * name is also present as a static inner class of another class
  * in the same package, see {@link ConcreteClass.NestedModel}.
  */
+@GsonAdapterKey
 public class NestedModel {
 
-    @GsonAdapterKey
     public String test1;
 }

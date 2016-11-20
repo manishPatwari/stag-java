@@ -23,17 +23,19 @@
  */
 package com.vimeo.sample.model;
 
+import com.google.gson.annotations.SerializedName;
 import com.vimeo.stag.GsonAdapterKey;
 
 /**
  * Simple user model used by the sample app.
  */
+@GsonAdapterKey
 public class User {
 
-    @GsonAdapterKey("name")
+    @SerializedName("name")
     public String mName;
 
-    @GsonAdapterKey("location")
+    @SerializedName("location")
     public String mLocation;
 
     @Override

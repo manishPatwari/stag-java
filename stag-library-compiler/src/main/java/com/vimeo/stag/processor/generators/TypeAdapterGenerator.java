@@ -34,6 +34,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import com.vimeo.stag.WriteRuntimeType;
 import com.vimeo.stag.processor.generators.model.AnnotatedClass;
 import com.vimeo.stag.processor.generators.model.ClassInfo;
 import com.vimeo.stag.processor.generators.model.SupportedTypesModel;
@@ -133,7 +134,7 @@ public class TypeAdapterGenerator {
             if (!isPrimitive) {
                 builder.addCode("\tif (object." + variableName + " != null) {\n");
             }
-            builder.addCode(getWriteCode(prefix, element.getValue(), name, "object." + variableName,
+            builder.addCode(getWriteCode(element.getKey(), prefix, element.getValue(), name, "object." + variableName,
                                          typeAdapterVariableNames));
             if (!isPrimitive) {
                 builder.addCode("\t}\n");
@@ -164,7 +165,8 @@ public class TypeAdapterGenerator {
 
             exclusiveTypeSet.add(fieldType);
         }
-
+        constructorBuilder.addStatement("this.gson = gson");
+        adapterBuilder.addField(Gson.class, "gson", Modifier.FINAL, Modifier.PRIVATE);
         for (TypeMirror fieldType : exclusiveTypeSet) {
             TypeName typeName = getAdapterFieldTypeName(fieldType);
             String fieldName = typeAdapterNamesMap.get(fieldType.toString());
@@ -247,11 +249,11 @@ public class TypeAdapterGenerator {
 
     @NotNull
     private static String getReadCode(@NotNull String prefix, @NotNull String variableName,
-                                      @NotNull TypeMirror type,
+                                      Element key, @NotNull TypeMirror type,
                                       @NotNull Map<String, String> typeAdapterFieldMap) {
         if (isArray(type)) {
             TypeMirror innerType = getInnerListType(type);
-            String innerRead = getReadType(innerType, typeAdapterFieldMap);
+            String innerRead = getReadType(key, innerType, typeAdapterFieldMap);
             return prefix + "reader.beginArray();\n" +
                    prefix + "object." + variableName + " = new java.util.ArrayList<>();\n" +
                    prefix + "while (reader.hasNext()) {\n" +
@@ -260,12 +262,12 @@ public class TypeAdapterGenerator {
                    prefix + "reader.endArray();";
         } else {
             return prefix + "object." + variableName + " = " +
-                   getReadType(type, typeAdapterFieldMap) + ";";
+                    getReadType(key, type, typeAdapterFieldMap) + ";";
         }
     }
 
     @NotNull
-    private static String getReadType(@NotNull TypeMirror type,
+    private static String getReadType(Element key, @NotNull TypeMirror type,
                                       @NotNull Map<String, String> typeAdapterFieldMap) {
         if (type.toString().equals(long.class.getName())) {
             return "reader.nextLong()";
@@ -280,16 +282,16 @@ public class TypeAdapterGenerator {
         } else if (type.toString().equals(float.class.getName())) {
             return "(float) reader.nextDouble()";
         } else {
-            return getAdapterRead(type, typeAdapterFieldMap);
+            return getAdapterRead(key, type, typeAdapterFieldMap);
         }
     }
 
-    private static String getWriteCode(@NotNull String prefix, @NotNull TypeMirror type,
+    private static String getWriteCode(Element key, @NotNull String prefix, @NotNull TypeMirror type,
                                        @NotNull String jsonName, @NotNull String variableName,
                                        @NotNull Map<String, String> typeAdapterFieldMap) {
         if (isArray(type)) {
             TypeMirror innerType = getInnerListType(type);
-            String innerWrite = getWriteType(innerType, "item", typeAdapterFieldMap);
+            String innerWrite = getWriteType(key, innerType, "item", typeAdapterFieldMap);
             return prefix + "writer.name(\"" + jsonName + "\");\n" +
                    prefix + "writer.beginArray();\n" +
                    prefix + "for (" + innerType + " item : " + variableName + ") {\n" +
@@ -298,13 +300,13 @@ public class TypeAdapterGenerator {
                    prefix + "writer.endArray();\n";
         } else {
             return prefix + "writer.name(\"" + jsonName + "\");\n" +
-                   prefix + getWriteType(type, variableName, typeAdapterFieldMap) + '\n';
+                    prefix + getWriteType(key, type, variableName, typeAdapterFieldMap) + '\n';
 
         }
     }
 
     @NotNull
-    private static String getWriteType(@NotNull TypeMirror type, @NotNull String variableName,
+    private static String getWriteType(Element key, @NotNull TypeMirror type, @NotNull String variableName,
                                        @NotNull Map<String, String> typeAdapterFieldMap) {
         if (type.toString().equals(long.class.getName()) ||
             type.toString().equals(double.class.getName()) ||
@@ -314,17 +316,21 @@ public class TypeAdapterGenerator {
             type.toString().equals(float.class.getName())) {
             return "writer.value(" + variableName + ");";
         } else {
-            return getAdapterWrite(type, variableName, typeAdapterFieldMap) + ";";
+            return getAdapterWrite(key, type, variableName, typeAdapterFieldMap) + ";";
         }
     }
 
-    private static String getAdapterWrite(@NotNull TypeMirror type, @NotNull String variableName,
+    private static String getAdapterWrite(Element key, @NotNull TypeMirror type, @NotNull String variableName,
                                           @NotNull Map<String, String> typeAdapterFieldMap) {
-        String adapterField = typeAdapterFieldMap.get(type.toString());
-        return adapterField + ".write(writer, " + variableName + ")";
+        if (key.getAnnotation(WriteRuntimeType.class) != null) {
+            return "((TypeAdapter)gson.getAdapter(" + variableName + ".getClass())).write(writer, " + variableName + ")";
+        } else {
+            String adapterField = typeAdapterFieldMap.get(type.toString());
+            return adapterField + ".write(writer, " + variableName + ")";
+        }
     }
 
-    private static String getAdapterRead(@NotNull TypeMirror type,
+    private static String getAdapterRead(Element key, @NotNull TypeMirror type,
                                          @NotNull Map<String, String> typeAdapterFieldMap) {
         String adapterField = typeAdapterFieldMap.get(type.toString());
         return adapterField + ".read(reader)";
@@ -371,7 +377,7 @@ public class TypeAdapterGenerator {
                 builder.addCode("\t\t\tcase \"" + name + "\":\n" +
                                 "\t\t\t\tif (jsonToken == " + jsonTokenType +
                                 ") {\n" +
-                                getReadCode("\t\t\t\t\t", variableName, element.getValue(),
+                        getReadCode("\t\t\t\t\t", variableName, element.getKey(), element.getValue(),
                                             typeAdapterFieldMap) +
                                 "\n\t\t\t\t} else {" +
                                 "\n\t\t\t\t\treader.skipValue();" +
@@ -380,7 +386,7 @@ public class TypeAdapterGenerator {
                                 "\t\t\t\tbreak;\n");
             } else {
                 builder.addCode("\t\t\tcase \"" + name + "\":\n" +
-                                getReadCode("\t\t\t\t\t", variableName, element.getValue(),
+                        getReadCode("\t\t\t\t\t", variableName, element.getKey(), element.getValue(),
                                             typeAdapterFieldMap) +
                                 '\n' +
                                 "\t\t\t\tbreak;\n");

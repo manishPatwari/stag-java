@@ -24,11 +24,9 @@
 package com.vimeo.stag.processor;
 
 import com.google.auto.service.AutoService;
-import com.google.gson.annotations.SerializedName;
 import com.squareup.javapoet.JavaFile;
-import com.vimeo.stag.GsonAdapterKey;
+import com.vimeo.stag.UseStag;
 import com.vimeo.stag.processor.generators.StagGenerator;
-import com.vimeo.stag.processor.generators.TypeAdapterFactoryGenerator;
 import com.vimeo.stag.processor.generators.TypeAdapterGenerator;
 import com.vimeo.stag.processor.generators.TypeTokenConstantsGenerator;
 import com.vimeo.stag.processor.generators.model.AnnotatedClass;
@@ -68,7 +66,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("com.vimeo.stag.GsonAdapterKey")
+@SupportedAnnotationTypes("com.vimeo.stag.UseStag")
 @SupportedOptions(value = {"stagGeneratedPackageName"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public final class StagProcessor extends AbstractProcessor {
@@ -82,7 +80,7 @@ public final class StagProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> set = new HashSet<>();
-        set.add(GsonAdapterKey.class.getCanonicalName());
+        set.add(UseStag.class.getCanonicalName());
         return set;
     }
 
@@ -105,7 +103,7 @@ public final class StagProcessor extends AbstractProcessor {
         TypeUtils.initialize(processingEnv.getTypeUtils());
         ElementUtils.initialize(processingEnv.getElementUtils());
 
-        DebugLog.log("\nBeginning @GsonAdapterKey annotation processing\n");
+        DebugLog.log("\nBeginning @UseStag annotation processing\n");
 
         mHasBeenProcessed = true;
         Map<Element, List<VariableElement>> variableMap = new HashMap<>();
@@ -115,7 +113,7 @@ public final class StagProcessor extends AbstractProcessor {
          */
         Set<? extends Element> rootElements = roundEnv.getRootElements();
         for (Element rootElement : rootElements) {
-            if (rootElement.getAnnotation(GsonAdapterKey.class) != null) {
+            if (rootElement.getAnnotation(UseStag.class) != null) {
                 List<? extends Element> enclosedElements = rootElement.getEnclosedElements();
                 for (Element enclosedElement : enclosedElements) {
                     if (enclosedElement instanceof VariableElement) {
@@ -163,11 +161,6 @@ public final class StagProcessor extends AbstractProcessor {
                     JavaFile javaFile = JavaFile.builder(classInfo.getPackageName(),
                             independentAdapter.getTypeAdapterSpec(typeTokenConstantsGenerator)).build();
                     FileGenUtils.writeToFile(javaFile, filer);
-
-                    TypeAdapterFactoryGenerator factoryGenerator = new TypeAdapterFactoryGenerator(classInfo);
-                    javaFile = JavaFile.builder(classInfo.getPackageName(),
-                            factoryGenerator.getTypeAdapterFactorySpec()).build();
-                    FileGenUtils.writeToFile(javaFile, filer);
                 }
             }
 
@@ -177,7 +170,7 @@ public final class StagProcessor extends AbstractProcessor {
             throw new RuntimeException(e);
         }
 
-        DebugLog.log("\nSuccessfully processed @GsonAdapterKey annotations\n");
+        DebugLog.log("\nSuccessfully processed @UseStag annotations\n");
 
         return true;
     }

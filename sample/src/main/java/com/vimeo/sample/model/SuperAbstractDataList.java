@@ -24,7 +24,7 @@
 package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.vimeo.stag.GsonAdapterKey;
+import com.vimeo.stag.UseStag;
 
 /**
  * Ensures that retrieving fields from
@@ -36,7 +36,7 @@ import com.vimeo.stag.GsonAdapterKey;
  * @param <T> the paging type.
  * @param <K> the data type.
  */
-@GsonAdapterKey
+@UseStag
 public class SuperAbstractDataList<T, K> {
 
     @SerializedName("paging")

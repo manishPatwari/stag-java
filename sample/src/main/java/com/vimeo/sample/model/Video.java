@@ -24,17 +24,19 @@
 package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.vimeo.stag.GsonAdapterKey;
+import com.vimeo.stag.WriteRuntimeType;
+import com.vimeo.stag.UseStag;
 
 import java.util.Date;
 
 /**
  * Simple video model used by the sample app.
  */
-@GsonAdapterKey
+@UseStag
 public class Video {
 
     @SerializedName("user")
+    @WriteRuntimeType
     public User mUser;
 
     @SerializedName("link")

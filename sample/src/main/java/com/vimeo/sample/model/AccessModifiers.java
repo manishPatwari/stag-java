@@ -24,14 +24,14 @@
 package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.vimeo.stag.GsonAdapterKey;
+import com.vimeo.stag.UseStag;
 
 /**
  * Entity ensuring that all supported modifiers are allowed.
  * Public, protected, and package-private modifiers are allowed.
  * Private modifier is not allowed.
  */
-@GsonAdapterKey
+@UseStag
 public class AccessModifiers {
 
     // private modifier is not allowed

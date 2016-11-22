@@ -50,19 +50,6 @@ import java.lang.annotation.Target;
  * <p/>
  * See the sample code for examples of each.
  */
-@Target({ElementType.FIELD, ElementType.TYPE})
-public @interface GsonAdapterKey {
-
-    /**
-     * The optional value for the JSON key
-     * to which the member variable will be
-     * mapped. If none is supplied, then the
-     * name of the member variable will be
-     * used as the key.
-     *
-     * @return the value for the JSON key
-     * or empty if there is none.
-     */
-    String value() default "";
-
+@Target(ElementType.TYPE)
+public @interface UseStag {
 }

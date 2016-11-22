@@ -24,12 +24,12 @@
 package com.vimeo.sample.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.vimeo.stag.GsonAdapterKey;
+import com.vimeo.stag.UseStag;
 
 /**
  * Simple stats model used by the sample app.
  */
-@GsonAdapterKey
+@UseStag
 public class Stats {
 
     @SerializedName("plays")
